@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/myblog/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/myblog/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/myblog/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/myblog/images/safari-pinned-tab.svg" color="#222">
+
+<link rel="stylesheet" href="/myblog/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"haiqingxx8.github.io","root":"/myblog/","images":"/myblog/images","scheme":"Gemini","darkmode":false,"version":"8.24.0","exturl":false,"sidebar":{"position":"right","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12,"enable":true,"b2t":false,"scrollpercent":false,"onmobile":false},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"default","show_result":true},"fold":{"enable":false,"height":500},"language":false,"highlight_theme":"normal"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"disqus","storage":true,"lazyload":true,"nav":null,"count":true,"text":"评论","orderby":"latest","login":"登录","admin":"博主","page_text":"评论","comment_placeholder":"说点什么吧..."},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/myblog/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false,"labels":{"input_placeholder":"搜索文章...","hits_empty":"找不到您查询的内容: ${query}"}}}</script><script src="/myblog/js/config.js" defer></script>
+
+    <meta name="description" content="单体系统业务逻辑耦合，难以维护。分层架构可以让业务逻辑、控制层和数据访问层清晰分离，便于测试和扩展">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringMVC 分层架构与事务边界">
+<meta property="og:url" content="https://haiqingxx8.github.io/2020/01/15/SpringMVC%20%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E4%B8%8E%E4%BA%8B%E5%8A%A1%E8%BE%B9%E7%95%8C/index.html">
+<meta property="og:site_name" content="我的技术博客">
+<meta property="og:description" content="单体系统业务逻辑耦合，难以维护。分层架构可以让业务逻辑、控制层和数据访问层清晰分离，便于测试和扩展">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-01-15T10:35:00.000Z">
+<meta property="article:modified_time" content="2025-08-13T16:28:20.315Z">
+<meta property="article:author" content="haiqingxx8">
+<meta property="article:tag" content="学习心得">
+<meta property="article:tag" content="SpringMVC">
+<meta property="article:tag" content="三层分层架构">
+<meta property="article:tag" content="事务管理">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://haiqingxx8.github.io/2020/01/15/SpringMVC%20%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E4%B8%8E%E4%BA%8B%E5%8A%A1%E8%BE%B9%E7%95%8C/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://haiqingxx8.github.io/2020/01/15/SpringMVC%20%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E4%B8%8E%E4%BA%8B%E5%8A%A1%E8%BE%B9%E7%95%8C/","path":"2020/01/15/SpringMVC 分层架构与事务边界/","title":"SpringMVC 分层架构与事务边界"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>SpringMVC 分层架构与事务边界 | 我的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/utils.js" defer></script><script src="/myblog/js/motion.js" defer></script><script src="/myblog/js/sidebar.js" defer></script><script src="/myblog/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/myblog/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/myblog/atom.xml" title="我的技术博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/myblog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">我的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录技术学习心得，分享开发经验</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/myblog/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/myblog/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-categories"><a href="/myblog/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/myblog/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-about"><a href="/myblog/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SpringMVC-%E8%B0%83%E5%BA%A6%E9%93%BE"><span class="nav-number">2.</span> <span class="nav-text">SpringMVC 调度链</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DispatcherServlet-%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">2.1.</span> <span class="nav-text">DispatcherServlet 执行流程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">代码示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Controller-%E5%B1%82"><span class="nav-number">3.1.</span> <span class="nav-text">Controller 层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Service-%E5%B1%82"><span class="nav-number">3.2.</span> <span class="nav-text">Service 层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mapper-%E5%B1%82"><span class="nav-number">3.3.</span> <span class="nav-text">Mapper 层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E5%88%86%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">技术分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86"><span class="nav-number">4.1.</span> <span class="nav-text">事务原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E9%83%A8%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E4%BA%8B%E5%8A%A1%E5%A4%B1%E6%95%88"><span class="nav-number">4.2.</span> <span class="nav-text">内部方法调用事务失效</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E6%A0%A1%E9%AA%8C"><span class="nav-number">4.3.</span> <span class="nav-text">参数校验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E4%BC%98%E5%8A%BF"><span class="nav-number">5.</span> <span class="nav-text">分层架构优势</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E8%81%8C%E8%B4%A3%E5%88%86%E7%A6%BB"><span class="nav-number">5.1.</span> <span class="nav-text">1. 职责分离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E4%BE%BF%E4%BA%8E%E6%B5%8B%E8%AF%95"><span class="nav-number">5.2.</span> <span class="nav-text">2. 便于测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%98%93%E4%BA%8E%E6%89%A9%E5%B1%95"><span class="nav-number">5.3.</span> <span class="nav-text">3. 易于扩展</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">6.</span> <span class="nav-text">最佳实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%BA%8B%E5%8A%A1%E8%BE%B9%E7%95%8C%E6%8E%A7%E5%88%B6"><span class="nav-number">6.1.</span> <span class="nav-text">1. 事务边界控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%AD%96%E7%95%A5"><span class="nav-number">6.2.</span> <span class="nav-text">2. 异常处理策略</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="haiqingxx8"
+      src="/myblog/images/headimg.jpeg">
+  <p class="site-author-name" itemprop="name">haiqingxx8</p>
+  <div class="site-description" itemprop="description">个人技术博客，专注于Java后端、前端开发、系统架构等技术分享</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/myblog/archives/">
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/myblog/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/myblog/tags/">
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://haiqingxx8.github.io/myblog/" title="GitHub → https:&#x2F;&#x2F;haiqingxx8.github.io&#x2F;myblog&#x2F;" rel="noopener me"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/yourusername" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;yourusername" rel="noopener me" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/myblog/images/wechat-qr.png" title="WeChat → &#x2F;images&#x2F;wechat-qr.png" rel="noopener me"><i class="fab fa-weixin fa-fw"></i>WeChat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://haiqingxx8.github.io/2020/01/15/SpringMVC%20%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E4%B8%8E%E4%BA%8B%E5%8A%A1%E8%BE%B9%E7%95%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/myblog/images/headimg.jpeg">
+      <meta itemprop="name" content="haiqingxx8">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="我的技术博客">
+      <meta itemprop="description" content="个人技术博客，专注于Java后端、前端开发、系统架构等技术分享">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="SpringMVC 分层架构与事务边界 | 我的技术博客">
+      <meta itemprop="description" content="单体系统业务逻辑耦合，难以维护。分层架构可以让业务逻辑、控制层和数据访问层清晰分离，便于测试和扩展">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SpringMVC 分层架构与事务边界
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-01-15 18:35:00" itemprop="dateCreated datePublished" datetime="2020-01-15T18:35:00+08:00">2020-01-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/myblog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" itemprop="url" rel="index"><span itemprop="name">后端开发</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/myblog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/SpringMVC%E6%A1%86%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">SpringMVC框架</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+            <div class="post-description">单体系统业务逻辑耦合，难以维护。分层架构可以让业务逻辑、控制层和数据访问层清晰分离，便于测试和扩展</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>单体系统业务逻辑耦合，难以维护。分层架构可以让业务逻辑、控制层和数据访问层清晰分离，便于测试和扩展。</p>
+<h2 id="SpringMVC-调度链"><a href="#SpringMVC-调度链" class="headerlink" title="SpringMVC 调度链"></a>SpringMVC 调度链</h2><h3 id="DispatcherServlet-执行流程"><a href="#DispatcherServlet-执行流程" class="headerlink" title="DispatcherServlet 执行流程"></a>DispatcherServlet 执行流程</h3><ol>
+<li><strong>接收请求</strong>：客户端请求到达 DispatcherServlet</li>
+<li><strong>HandlerMapping 定位 Controller 方法</strong>：根据请求路径找到对应的处理方法</li>
+<li><strong>HandlerAdapter 调用方法</strong>：通过适配器调用具体的 Controller 方法</li>
+<li><strong>ReturnValueHandler 处理返回值</strong>：处理方法的返回值</li>
+<li><strong>ViewResolver 渲染视图</strong>：解析视图并返回响应</li>
+</ol>
+<h2 id="代码示例"><a href="#代码示例" class="headerlink" title="代码示例"></a>代码示例</h2><h3 id="Controller-层"><a href="#Controller-层" class="headerlink" title="Controller 层"></a>Controller 层</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/customers&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomerController</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> CustomerService service;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">CustomerController</span><span class="params">(CustomerService service)</span> &#123; </span><br><span class="line">        <span class="built_in">this</span>.service = service; </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PostMapping</span></span><br><span class="line">    <span class="keyword">public</span> ResponseEntity&lt;Void&gt; <span class="title function_">add</span><span class="params">(<span class="meta">@Valid</span> <span class="meta">@RequestBody</span> CustomerDTO dto)</span> &#123;</span><br><span class="line">        service.createCustomer(dto);</span><br><span class="line">        <span class="keyword">return</span> ResponseEntity.ok().build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Service-层"><a href="#Service-层" class="headerlink" title="Service 层"></a>Service 层</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomerService</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> CustomerMapper mapper;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">CustomerService</span><span class="params">(CustomerMapper mapper)</span> &#123; </span><br><span class="line">        <span class="built_in">this</span>.mapper = mapper; </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional(rollbackFor = Exception.class)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">createCustomer</span><span class="params">(CustomerDTO dto)</span> &#123;</span><br><span class="line">        validate(dto.getPhone());</span><br><span class="line">        mapper.insert(dto);</span><br><span class="line">        logCreation(dto);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">validate</span><span class="params">(String phone)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!phone.matches(<span class="string">&quot;^1[3-9]\\d&#123;9&#125;$&quot;</span>)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Invalid phone&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">logCreation</span><span class="params">(CustomerDTO dto)</span> &#123;</span><br><span class="line">        <span class="comment">// 记录创建日志</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Mapper-层"><a href="#Mapper-层" class="headerlink" title="Mapper 层"></a>Mapper 层</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Mapper</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">CustomerMapper</span> &#123;</span><br><span class="line">    <span class="meta">@Insert(&quot;INSERT INTO customer(name,phone) VALUES(#&#123;name&#125;,#&#123;phone&#125;)&quot;)</span></span><br><span class="line">    <span class="type">int</span> <span class="title function_">insert</span><span class="params">(CustomerDTO dto)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="技术分析"><a href="#技术分析" class="headerlink" title="技术分析"></a>技术分析</h2><h3 id="事务原理"><a href="#事务原理" class="headerlink" title="事务原理"></a>事务原理</h3><p>Spring 事务管理基于 AOP 代理机制：</p>
+<ol>
+<li><strong>AOP 代理拦截方法</strong>：Spring 创建代理对象拦截带有 <code>@Transactional</code> 注解的方法</li>
+<li><strong>TransactionInterceptor 处理</strong>：调用事务拦截器处理事务逻辑</li>
+<li><strong>事务执行流程</strong>：<ul>
+<li><code>getTransaction()</code> - 获取事务</li>
+<li>方法执行</li>
+<li><code>commit/rollback</code> - 提交或回滚事务</li>
+</ul>
+</li>
+</ol>
+<h3 id="内部方法调用事务失效"><a href="#内部方法调用事务失效" class="headerlink" title="内部方法调用事务失效"></a>内部方法调用事务失效</h3><p><strong>问题</strong>：在同一个类中，非事务方法调用事务方法时，事务不会生效。</p>
+<p><strong>原因</strong>：Spring 的 AOP 代理只能拦截外部调用，内部方法调用不会经过代理。</p>
+<p><strong>解决方案</strong>：使用 <code>AopContext.currentProxy()</code> 获取当前代理对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomerService</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">methodA</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">// 事务方法</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">methodB</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">// 非事务方法调用事务方法</span></span><br><span class="line">        <span class="type">CustomerService</span> <span class="variable">proxy</span> <span class="operator">=</span> (CustomerService) AopContext.currentProxy();</span><br><span class="line">        proxy.methodA(); <span class="comment">// 通过代理调用，事务生效</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="参数校验"><a href="#参数校验" class="headerlink" title="参数校验"></a>参数校验</h3><p><strong>@Valid + @RequestBody 机制</strong>：</p>
+<ol>
+<li><strong>HandlerMethodArgumentResolver 解析</strong>：Spring MVC 的参数解析器处理请求参数</li>
+<li><strong>@Valid 触发校验</strong>：JSR-303 Bean Validation 进行参数校验</li>
+<li><strong>校验失败处理</strong>：抛出 <code>MethodArgumentNotValidException</code></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ValidationController</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@PostMapping(&quot;/validate&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> ResponseEntity&lt;String&gt; <span class="title function_">validate</span><span class="params">(<span class="meta">@Valid</span> <span class="meta">@RequestBody</span> CustomerDTO dto)</span> &#123;</span><br><span class="line">        <span class="comment">// 参数校验通过后执行</span></span><br><span class="line">        <span class="keyword">return</span> ResponseEntity.ok(<span class="string">&quot;Validation passed&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@ExceptionHandler(MethodArgumentNotValidException.class)</span></span><br><span class="line">    <span class="keyword">public</span> ResponseEntity&lt;String&gt; <span class="title function_">handleValidationException</span><span class="params">(MethodArgumentNotValidException ex)</span> &#123;</span><br><span class="line">        <span class="comment">// 处理校验失败异常</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">errorMessage</span> <span class="operator">=</span> ex.getBindingResult().getFieldErrors()</span><br><span class="line">            .stream()</span><br><span class="line">            .map(FieldError::getDefaultMessage)</span><br><span class="line">            .collect(Collectors.joining(<span class="string">&quot;, &quot;</span>));</span><br><span class="line">        <span class="keyword">return</span> ResponseEntity.badRequest().body(errorMessage);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="分层架构优势"><a href="#分层架构优势" class="headerlink" title="分层架构优势"></a>分层架构优势</h2><h3 id="1-职责分离"><a href="#1-职责分离" class="headerlink" title="1. 职责分离"></a>1. 职责分离</h3><ul>
+<li><strong>Controller 层</strong>：处理 HTTP 请求和响应</li>
+<li><strong>Service 层</strong>：处理业务逻辑</li>
+<li><strong>Mapper&#x2F;Repository 层</strong>：处理数据访问</li>
+</ul>
+<h3 id="2-便于测试"><a href="#2-便于测试" class="headerlink" title="2. 便于测试"></a>2. 便于测试</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ExtendWith(MockitoExtension.class)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CustomerServiceTest</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Mock</span></span><br><span class="line">    <span class="keyword">private</span> CustomerMapper customerMapper;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@InjectMocks</span></span><br><span class="line">    <span class="keyword">private</span> CustomerService customerService;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">testCreateCustomer</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">// Given</span></span><br><span class="line">        <span class="type">CustomerDTO</span> <span class="variable">dto</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CustomerDTO</span>(<span class="string">&quot;张三&quot;</span>, <span class="string">&quot;13800138000&quot;</span>);</span><br><span class="line">        <span class="keyword">when</span>(customerMapper.insert(dto)).thenReturn(<span class="number">1</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// When</span></span><br><span class="line">        customerService.createCustomer(dto);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Then</span></span><br><span class="line">        verify(customerMapper).insert(dto);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-易于扩展"><a href="#3-易于扩展" class="headerlink" title="3. 易于扩展"></a>3. 易于扩展</h3><ul>
+<li>新增功能时只需要在对应层添加代码</li>
+<li>修改业务逻辑时不影响其他层</li>
+<li>可以独立优化每一层的性能</li>
+</ul>
+<h2 id="最佳实践"><a href="#最佳实践" class="headerlink" title="最佳实践"></a>最佳实践</h2><h3 id="1-事务边界控制"><a href="#1-事务边界控制" class="headerlink" title="1. 事务边界控制"></a>1. 事务边界控制</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OrderService</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 事务边界：整个订单创建过程</span></span><br><span class="line">    <span class="meta">@Transactional(rollbackFor = Exception.class)</span></span><br><span class="line">    <span class="keyword">public</span> Order <span class="title function_">createOrder</span><span class="params">(OrderRequest request)</span> &#123;</span><br><span class="line">        <span class="comment">// 1. 验证库存</span></span><br><span class="line">        validateStock(request.getProductId(), request.getQuantity());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 2. 创建订单</span></span><br><span class="line">        <span class="type">Order</span> <span class="variable">order</span> <span class="operator">=</span> buildOrder(request);</span><br><span class="line">        order = orderRepository.save(order);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 3. 扣减库存</span></span><br><span class="line">        inventoryService.reduceStock(request.getProductId(), request.getQuantity());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 4. 发送通知</span></span><br><span class="line">        notificationService.sendOrderCreatedNotification(order);</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> order;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-异常处理策略"><a href="#2-异常处理策略" class="headerlink" title="2. 异常处理策略"></a>2. 异常处理策略</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ControllerAdvice</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">GlobalExceptionHandler</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@ExceptionHandler(BusinessException.class)</span></span><br><span class="line">    <span class="keyword">public</span> ResponseEntity&lt;ErrorResponse&gt; <span class="title function_">handleBusinessException</span><span class="params">(BusinessException ex)</span> &#123;</span><br><span class="line">        <span class="type">ErrorResponse</span> <span class="variable">error</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ErrorResponse</span>();</span><br><span class="line">        error.setCode(<span class="string">&quot;BUSINESS_ERROR&quot;</span>);</span><br><span class="line">        error.setMessage(ex.getMessage());</span><br><span class="line">        <span class="keyword">return</span> ResponseEntity.badRequest().body(error);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@ExceptionHandler(Exception.class)</span></span><br><span class="line">    <span class="keyword">public</span> ResponseEntity&lt;ErrorResponse&gt; <span class="title function_">handleGenericException</span><span class="params">(Exception ex)</span> &#123;</span><br><span class="line">        <span class="type">ErrorResponse</span> <span class="variable">error</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ErrorResponse</span>();</span><br><span class="line">        error.setCode(<span class="string">&quot;INTERNAL_ERROR&quot;</span>);</span><br><span class="line">        error.setMessage(<span class="string">&quot;系统内部错误&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/myblog/tags/%E5%AD%A6%E4%B9%A0%E5%BF%83%E5%BE%97/" rel="tag"># 学习心得</a>
+              <a href="/myblog/tags/SpringMVC/" rel="tag"># SpringMVC</a>
+              <a href="/myblog/tags/%E4%B8%89%E5%B1%82%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84/" rel="tag"># 三层分层架构</a>
+              <a href="/myblog/tags/%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86/" rel="tag"># 事务管理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+            </div>
+            <div class="post-nav-item">
+                <a href="/myblog/2020/02/10/SpringMVC%20%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%85%A8%E5%B1%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" rel="next" title="SpringMVC 参数解析与全局异常处理">
+                  SpringMVC 参数解析与全局异常处理 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">haiqingxx8</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
