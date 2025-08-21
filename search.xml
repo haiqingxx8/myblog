@@ -204,13 +204,13 @@
       
         <tags>
             
-            <tag> 性能调优 </tag>
-            
             <tag> MyBatis </tag>
             
-            <tag> 踩坑记录 </tag>
+            <tag> 性能调优 </tag>
             
             <tag> SQL优化 </tag>
+            
+            <tag> 踩坑记录 </tag>
             
         </tags>
       
@@ -435,9 +435,9 @@
       
         <tags>
             
-            <tag> 性能调优 </tag>
-            
             <tag> MyBatis </tag>
+            
+            <tag> 性能调优 </tag>
             
             <tag> 分页查询 </tag>
             
