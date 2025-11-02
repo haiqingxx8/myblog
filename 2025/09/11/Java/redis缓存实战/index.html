@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/myblog/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/myblog/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/myblog/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/myblog/images/safari-pinned-tab.svg" color="#222">
+
+<link rel="stylesheet" href="/myblog/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"haiqingxx8.github.io","root":"/myblog/","images":"/myblog/images","scheme":"Gemini","darkmode":false,"version":"8.24.0","exturl":false,"sidebar":{"position":"right","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12,"enable":true,"b2t":false,"scrollpercent":false,"onmobile":false},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"default","show_result":true},"fold":{"enable":false,"height":500},"language":false,"highlight_theme":"normal"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"disqus","storage":true,"lazyload":true,"nav":null,"count":true,"text":"评论","orderby":"latest","login":"登录","admin":"博主","page_text":"评论","comment_placeholder":"说点什么吧..."},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/myblog/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false,"labels":{"input_placeholder":"搜索文章...","hits_empty":"找不到您查询的内容: ${query}"}}}</script><script src="/myblog/js/config.js" defer></script>
+
+    <meta name="description" content="覆盖常用缓存中间件、Redis特性、高可用方案、复制原理、持久化对比、雪崩&#x2F;击穿&#x2F;穿透与淘汰策略的工程落地与面试要点">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis缓存实战">
+<meta property="og:url" content="https://haiqingxx8.github.io/2025/09/11/Java/redis%E7%BC%93%E5%AD%98%E5%AE%9E%E6%88%98/index.html">
+<meta property="og:site_name" content="我的技术博客">
+<meta property="og:description" content="覆盖常用缓存中间件、Redis特性、高可用方案、复制原理、持久化对比、雪崩&#x2F;击穿&#x2F;穿透与淘汰策略的工程落地与面试要点">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T02:00:00.000Z">
+<meta property="article:modified_time" content="2025-09-11T16:59:41.888Z">
+<meta property="article:author" content="haiqingxx8">
+<meta property="article:tag" content="Redis">
+<meta property="article:tag" content="缓存">
+<meta property="article:tag" content="高可用">
+<meta property="article:tag" content="持久化">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://haiqingxx8.github.io/2025/09/11/Java/redis%E7%BC%93%E5%AD%98%E5%AE%9E%E6%88%98/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://haiqingxx8.github.io/2025/09/11/Java/redis%E7%BC%93%E5%AD%98%E5%AE%9E%E6%88%98/","path":"2025/09/11/Java/redis缓存实战/","title":"Redis缓存实战"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Redis缓存实战 | 我的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/utils.js" defer></script><script src="/myblog/js/motion.js" defer></script><script src="/myblog/js/sidebar.js" defer></script><script src="/myblog/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/myblog/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/myblog/atom.xml" title="我的技术博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/myblog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">我的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录技术学习心得，分享开发经验</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/myblog/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/myblog/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-categories"><a href="/myblog/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/myblog/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-about"><a href="/myblog/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Redis 缓存实战（面试与落地双友好）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%B8%B8%E7%94%A8%E7%9A%84%E7%BC%93%E5%AD%98%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="nav-number">1.1.</span> <span class="nav-text">1. 常用的缓存中间件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Redis-%E7%9A%84%E6%A0%B8%E5%BF%83%E7%89%B9%E6%80%A7%EF%BC%88%E8%90%BD%E5%88%B0%E2%80%9C%E8%83%BD%E5%81%9A%E4%BB%80%E4%B9%88%E3%80%81%E5%81%9A%E5%BE%97%E5%A4%9A%E5%A5%BD%E2%80%9D%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">2. Redis 的核心特性（落到“能做什么、做得多好”）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E9%AB%98%E5%8F%AF%E7%94%A8%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88%EF%BC%88%E4%BB%8E%E7%AE%80%E5%8D%95%E5%88%B0%E5%AE%8C%E5%A4%87%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">3. 高可用实现方案（从简单到完备）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%EF%BC%88PSYNC%EF%BC%89"><span class="nav-number">1.4.</span> <span class="nav-text">4. 主从同步的实现原理（PSYNC）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%8C%81%E4%B9%85%E5%8C%96%E6%96%B9%E6%A1%88%E5%AF%B9%E6%AF%94"><span class="nav-number">1.5.</span> <span class="nav-text">5. 持久化方案对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9-%E5%87%BB%E7%A9%BF-%E7%A9%BF%E9%80%8F"><span class="nav-number">1.6.</span> <span class="nav-text">6. 缓存雪崩 &#x2F; 击穿 &#x2F; 穿透</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E5%86%85%E5%AD%98%E7%94%A8%E5%B0%BD%E4%B8%8E%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5%EF%BC%88maxmemory-policy%EF%BC%89"><span class="nav-number">1.7.</span> <span class="nav-text">7. 内存用尽与淘汰策略（maxmemory-policy）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-%E5%B8%B8%E8%A7%81%E7%BC%93%E5%AD%98%E8%AF%BB%E5%86%99%E7%AD%96%E7%95%A5"><span class="nav-number">1.8.</span> <span class="nav-text">8. 常见缓存读写策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E5%8F%82%E6%95%B0%E4%B8%8E%E8%BF%90%E7%BB%B4%E9%80%9F%E6%9F%A5%EF%BC%88%E7%94%9F%E4%BA%A7%E5%8F%AF%E7%94%A8%EF%BC%89"><span class="nav-number">1.9.</span> <span class="nav-text">9. 参数与运维速查（生产可用）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-%E9%9D%A2%E8%AF%95%E9%80%9F%E7%AD%94%E6%A8%A1%E6%9D%BF%EF%BC%8830s-%E7%BB%93%E6%9E%84%E5%8C%96%E5%9B%9E%E7%AD%94%EF%BC%89"><span class="nav-number">1.10.</span> <span class="nav-text">10. 面试速答模板（30s 结构化回答）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-%E4%BB%A3%E7%A0%81%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E5%9C%BA%E6%99%AF%EF%BC%88%E5%8F%AF%E7%9B%B4%E6%8E%A5%E5%A4%8D%E7%94%A8%EF%BC%89"><span class="nav-number">1.11.</span> <span class="nav-text">11. 代码与项目实战场景（可直接复用）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-%E7%BC%93%E5%AD%98%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%88%E5%BC%BA-%E6%9C%80%E7%BB%88%E4%B8%80%E8%87%B4%E7%9A%84%E5%B7%A5%E7%A8%8B%E7%AD%96%E7%95%A5%EF%BC%89"><span class="nav-number">1.12.</span> <span class="nav-text">12. 缓存与数据库一致性（强&#x2F;最终一致的工程策略）</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="haiqingxx8"
+      src="/myblog/images/headimg.jpeg">
+  <p class="site-author-name" itemprop="name">haiqingxx8</p>
+  <div class="site-description" itemprop="description">个人技术博客，专注于Java后端、前端开发、系统架构等技术分享</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/myblog/archives/">
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/myblog/categories/">
+        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/myblog/tags/">
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://haiqingxx8.github.io/myblog/" title="GitHub → https:&#x2F;&#x2F;haiqingxx8.github.io&#x2F;myblog&#x2F;" rel="noopener me"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/yourusername" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;yourusername" rel="noopener me" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/myblog/images/wechat-qr.png" title="WeChat → &#x2F;images&#x2F;wechat-qr.png" rel="noopener me"><i class="fab fa-weixin fa-fw"></i>WeChat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://haiqingxx8.github.io/2025/09/11/Java/redis%E7%BC%93%E5%AD%98%E5%AE%9E%E6%88%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/myblog/images/headimg.jpeg">
+      <meta itemprop="name" content="haiqingxx8">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="我的技术博客">
+      <meta itemprop="description" content="个人技术博客，专注于Java后端、前端开发、系统架构等技术分享">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Redis缓存实战 | 我的技术博客">
+      <meta itemprop="description" content="覆盖常用缓存中间件、Redis特性、高可用方案、复制原理、持久化对比、雪崩&#x2F;击穿&#x2F;穿透与淘汰策略的工程落地与面试要点">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis缓存实战
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-09-11 10:00:00" itemprop="dateCreated datePublished" datetime="2025-09-11T10:00:00+08:00">2025-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/myblog/categories/%E6%9E%B6%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">架构</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+            <div class="post-description">覆盖常用缓存中间件、Redis特性、高可用方案、复制原理、持久化对比、雪崩/击穿/穿透与淘汰策略的工程落地与面试要点</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1>Redis 缓存实战（面试与落地双友好）</h1>
+<h2 id="1-常用的缓存中间件">1. 常用的缓存中间件</h2>
+<ul>
+<li>本地缓存：Caffeine/Ehcache（纳秒级读取，进程内，容量受限，适合作为一级缓存）</li>
+<li>分布式缓存：Redis（最常用，丰富数据结构/脚本/事务/持久化/高可用）、Memcached（KV、内存高效、无持久化）、Tair/PolarDB-Cache/云厂商托管服务（免运维）</li>
+<li>典型分层：Caffeine（L1）+ Redis（L2）+ DB（源），读路径优先命中前两层</li>
+</ul>
+<h2 id="2-Redis-的核心特性（落到“能做什么、做得多好”）">2. Redis 的核心特性（落到“能做什么、做得多好”）</h2>
+<ul>
+<li>数据结构：String、Hash、List、Set、ZSet、Bitmap、HyperLogLog、Geo、Stream；支持原子操作</li>
+<li>高性能：单线程模型（命令串行避免锁冲突）+ I/O 多路复用（epoll/kqueue）+ 内存数据，P99 低毫秒级</li>
+<li>功能：TTL/过期、发布订阅、Lua 原子脚本、事务（MULTI/EXEC）、Pipeline、模块（Bloom、TopK 等）</li>
+<li>扩展：主从复制、哨兵（Sentinel）、集群（Cluster 16384 槽位）、RDB/AOF 持久化</li>
+</ul>
+<h2 id="3-高可用实现方案（从简单到完备）">3. 高可用实现方案（从简单到完备）</h2>
+<ul>
+<li>主从 + 读写分离：主写从读，提升读吞吐；主挂需人工切换</li>
+<li>Sentinel：自动主从故障转移（投票、仲裁、选主），适合小中型集群</li>
+<li>Cluster：分片+高可用，每个主节点管理一部分槽位，节点间自动故障转移，水平扩展</li>
+<li>代理/网关：Twemproxy/Codis/云厂商网关，屏蔽分片细节、连接复用</li>
+<li>建议：中小业务优先哨兵；多租户/高并发/大数据量优先集群；配合代理降低客户端复杂度</li>
+</ul>
+<h2 id="4-主从同步的实现原理（PSYNC）">4. 主从同步的实现原理（PSYNC）</h2>
+<ul>
+<li>初次全量：从节点发送 PSYNC，主节点 bgsave 生成 RDB 并通过 socket 发送；期间主节点将新增写入追加到复制缓冲</li>
+<li>增量复制：基于 master_replid + offset 的复制积压(backlog)进行增量对齐</li>
+<li>断连重连：偏移量仍在 backlog 则部分重同步；否则回退到全量</li>
+<li>关键细节：复制缓冲区大小、磁盘/无盘复制（diskless）、min-replicas-to-write 与 min-replicas-max-lag 提升写入安全</li>
+</ul>
+<h2 id="5-持久化方案对比">5. 持久化方案对比</h2>
+<ul>
+<li>RDB（快照）：周期/手动 bgsave；优点：文件小、恢复快；缺点：崩溃时丢失最近一段数据</li>
+<li>AOF（追加日志）：每次写入记录命令，重启回放；策略：always/everysec/no；优点：数据更完整；缺点：文件大、恢复较慢</li>
+<li>AOF 重写：bgrewriteaof 将日志压缩为等价最小集，控制体积</li>
+<li>混合持久化（AOF + RDB 头）：启动更快、丢失更少（Redis 7 默认）</li>
+<li>实战建议：线上开启 appendonly yes；appendfsync everysec；定期重写；关键实例保留 RDB 以备快速恢复</li>
+</ul>
+<h2 id="6-缓存雪崩-击穿-穿透">6. 缓存雪崩 / 击穿 / 穿透</h2>
+<ul>
+<li>雪崩（大量键同时失效→DB 被打爆）
+<ul>
+<li>规避：TTL 加随机抖动、热点 key 提前预热、多级缓存、限流/降级、隔离核心与非核心业务</li>
+</ul>
+</li>
+<li>击穿（单个热点 key 刚好过期→瞬时高并发打到 DB）
+<ul>
+<li>规避：互斥锁缓存重建（SETNX + 过期 + 拿不到走旧值）、逻辑过期+异步刷新、后台单航道刷新(singleflight)</li>
+</ul>
+</li>
+<li>穿透（查询本就不存在的数据→穿透缓存直打 DB）
+<ul>
+<li>规避：布隆过滤器拦截、缓存空对象（短 TTL）、接口参数校验/鉴权、异常流量限速</li>
+</ul>
+</li>
+</ul>
+<h2 id="7-内存用尽与淘汰策略（maxmemory-policy）">7. 内存用尽与淘汰策略（maxmemory-policy）</h2>
+<ul>
+<li>可选策略：
+<ul>
+<li>noeviction（默认）：内存不足直接报错</li>
+<li>volatile-ttl/random/lru/lfu：仅淘汰设置了 TTL 的键</li>
+<li>allkeys-random/lru/lfu：在所有键中随机或按 LRU/LFU 淘汰</li>
+</ul>
+</li>
+<li>选择建议：allkeys-lfu（命中热度更稳）、配合 maxmemory 设置，控制采样样本（maxmemory-samples）</li>
+<li>相关参数：lfu-log-factor、lfu-decay-time 调整热度衰减；留 20% 安全余量，监控 evicted_keys</li>
+</ul>
+<h2 id="8-常见缓存读写策略">8. 常见缓存读写策略</h2>
+<ul>
+<li>Cache-Aside（旁路缓存）：应用先读缓存，失效后读库并回填；写先写库再删缓存（或双删）</li>
+<li>Read/Write-Through：由缓存层代理读写并同步持久层（常见于托管/代理产品）</li>
+<li>Write-Behind：异步批量写回降低写放大，注意数据一致性与丢失风险</li>
+</ul>
+<h2 id="9-参数与运维速查（生产可用）">9. 参数与运维速查（生产可用）</h2>
+<ul>
+<li>持久化：appendonly yes；appendfsync everysec；auto-aof-rewrite-percentage 100；stop-writes-on-bgsave-error no（谨慎）</li>
+<li>复制与安全：replica-read-only yes；repl-backlog-size 按峰值写入与断连时间估；min-replicas-to-write 1；min-replicas-max-lag 10</li>
+<li>高可用：sentinel down-after-milliseconds 5000；failover-timeout 60000；parallel-syncs 1-2；cluster-node-timeout 5s；cluster-require-full-coverage yes</li>
+<li>资源：maxmemory 与 policy、tcp-keepalive、timeout、内核 somaxconn/文件描述符、numa 绑定与透明大页关闭</li>
+<li>监控：keyspace_hits/misses、used_memory/fragmentation、expired/evicted_keys、latency、commandstats、replication 健康</li>
+</ul>
+<h2 id="10-面试速答模板（30s-结构化回答）">10. 面试速答模板（30s 结构化回答）</h2>
+<ul>
+<li>问：Redis 高可用怎么做？
+<ul>
+<li>答：小规模用 Sentinel（自动选主），大规模用 Cluster（分片+主从），读写分离+代理；关键参数（down-after、failover-timeout、node-timeout）+ 演练切换</li>
+</ul>
+</li>
+<li>问：持久化如何选？
+<ul>
+<li>答：AOF 保数据完整、RDB 恢复更快；线上混合持久化，everysec + 定期重写；业务分级决定数据可接受丢失窗口</li>
+</ul>
+</li>
+<li>问：如何治理雪崩/击穿/穿透？
+<ul>
+<li>答：抖动 TTL、预热、多级缓存、限流降级；互斥锁/逻辑过期/单航道刷新；布隆过滤、缓存空值、参数校验</li>
+</ul>
+</li>
+</ul>
+<h2 id="11-代码与项目实战场景（可直接复用）">11. 代码与项目实战场景（可直接复用）</h2>
+<ul>
+<li>场景A：热点详情缓存（旁路缓存 + 逻辑过期 + 单航道刷新）</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用 Spring + RedisTemplate</span></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ProductCacheService</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">KEY_PREFIX</span> <span class="operator">=</span> <span class="string">&quot;prod:detail:&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">LOGICAL_EXPIRE_SEC</span> <span class="operator">=</span> <span class="number">300</span>; <span class="comment">// 5分钟</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span> <span class="keyword">private</span> StringRedisTemplate redis;</span><br><span class="line">    <span class="meta">@Autowired</span> <span class="keyword">private</span> ProductRepository repo;</span><br><span class="line">    <span class="meta">@Autowired</span> <span class="keyword">private</span> RedissonClient redisson; <span class="comment">// 分布式锁</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ProductDTO <span class="title function_">getProduct</span><span class="params">(<span class="type">long</span> id)</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> KEY_PREFIX + id;</span><br><span class="line">        <span class="type">String</span> <span class="variable">json</span> <span class="operator">=</span> redis.opsForValue().get(key);</span><br><span class="line">        <span class="keyword">if</span> (json != <span class="literal">null</span>) &#123;</span><br><span class="line">            CacheEnvelope&lt;ProductDTO&gt; envelope = Jsons.from(json);</span><br><span class="line">            <span class="keyword">if</span> (System.currentTimeMillis() &lt; envelope.getExpireAt()) &#123;</span><br><span class="line">                <span class="keyword">return</span> envelope.getData(); <span class="comment">// 命中且未过期</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 逻辑过期，异步刷新</span></span><br><span class="line">            tryRefreshAsync(id, key);</span><br><span class="line">            <span class="keyword">return</span> envelope.getData(); <span class="comment">// 先返回旧值</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 缓存未命中：加分布式锁，防止击穿</span></span><br><span class="line">        <span class="type">RLock</span> <span class="variable">lock</span> <span class="operator">=</span> redisson.getLock(<span class="string">&quot;lock:&quot;</span> + key);</span><br><span class="line">        <span class="keyword">if</span> (lock.tryLock()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="type">ProductDTO</span> <span class="variable">data</span> <span class="operator">=</span> repo.findById(id);</span><br><span class="line">                <span class="keyword">if</span> (data == <span class="literal">null</span>) &#123;</span><br><span class="line">                    <span class="comment">// 缓存空对象短TTL，防穿透</span></span><br><span class="line">                    redis.opsForValue().set(key, Jsons.to(<span class="keyword">new</span> <span class="title class_">CacheEnvelope</span>&lt;&gt;(<span class="literal">null</span>, nowPlus(<span class="number">60</span>))), <span class="number">60</span>, TimeUnit.SECONDS);</span><br><span class="line">                    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                redis.opsForValue().set(key, Jsons.to(<span class="keyword">new</span> <span class="title class_">CacheEnvelope</span>&lt;&gt;(data, nowPlus(LOGICAL_EXPIRE_SEC))), LOGICAL_EXPIRE_SEC, TimeUnit.SECONDS);</span><br><span class="line">                <span class="keyword">return</span> data;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                lock.unlock();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 未拿到锁，短暂退避再读</span></span><br><span class="line">        Threads.sleep(<span class="number">30</span>);</span><br><span class="line">        <span class="keyword">return</span> getProduct(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">tryRefreshAsync</span><span class="params">(<span class="type">long</span> id, String key)</span> &#123;</span><br><span class="line">        Executors.newSingleThreadExecutor().submit(() -&gt; &#123;</span><br><span class="line">            <span class="type">RLock</span> <span class="variable">lock</span> <span class="operator">=</span> redisson.getLock(<span class="string">&quot;rebuild:&quot;</span> + key);</span><br><span class="line">            <span class="keyword">if</span> (lock.tryLock()) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="type">ProductDTO</span> <span class="variable">fresh</span> <span class="operator">=</span> repo.findById(id);</span><br><span class="line">                    redis.opsForValue().set(key, Jsons.to(<span class="keyword">new</span> <span class="title class_">CacheEnvelope</span>&lt;&gt;(fresh, nowPlus(LOGICAL_EXPIRE_SEC))), LOGICAL_EXPIRE_SEC, TimeUnit.SECONDS);</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    lock.unlock();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> <span class="title function_">nowPlus</span><span class="params">(<span class="type">long</span> sec)</span> &#123; <span class="keyword">return</span> System.currentTimeMillis() + sec * <span class="number">1000</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Data</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">CacheEnvelope</span>&lt;T&gt; &#123; <span class="keyword">private</span> T data; <span class="keyword">private</span> <span class="type">long</span> expireAt; </span><br><span class="line">        CacheEnvelope() &#123;&#125;</span><br><span class="line">        CacheEnvelope(T d, <span class="type">long</span> e) &#123; <span class="built_in">this</span>.data = d; <span class="built_in">this</span>.expireAt = e; &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>场景B：排行榜与去重（ZSET + 布隆过滤器）</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 热门文章TopN，避免重复处理</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onArticleViewed</span><span class="params">(String articleId)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> <span class="string">&quot;hot:articles&quot;</span>;</span><br><span class="line">    stringRedisTemplate.opsForZSet().incrementScore(key, articleId, <span class="number">1D</span>);</span><br><span class="line">    stringRedisTemplate.expire(key, <span class="number">1</span>, TimeUnit.DAYS);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// RedisBloom 模块（伪代码）</span></span><br><span class="line">BF.RESERVE articles:bf <span class="number">0.01</span> <span class="number">1000000</span></span><br><span class="line">BF.ADD articles:bf &#123;articleId&#125;</span><br><span class="line">BF.EXISTS articles:bf &#123;articleId&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>场景C：分布式限流与滑动窗口</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">tryAcquire</span><span class="params">(String userId)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> <span class="string">&quot;rate:login:&quot;</span> + userId;</span><br><span class="line">    <span class="type">long</span> <span class="variable">now</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">    <span class="type">long</span> <span class="variable">window</span> <span class="operator">=</span> <span class="number">60_000L</span>; <span class="comment">// 1分钟</span></span><br><span class="line">    <span class="type">long</span> <span class="variable">start</span> <span class="operator">=</span> now - window;</span><br><span class="line">    <span class="comment">// 使用ZSET记录时间戳</span></span><br><span class="line">    redis.opsForZSet().removeRangeByScore(key, <span class="number">0</span>, start);</span><br><span class="line">    <span class="type">Long</span> <span class="variable">count</span> <span class="operator">=</span> redis.opsForZSet().zCard(key);</span><br><span class="line">    <span class="keyword">if</span> (count != <span class="literal">null</span> &amp;&amp; count &gt;= <span class="number">20</span>) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    redis.opsForZSet().add(key, String.valueOf(now), now);</span><br><span class="line">    redis.expire(key, <span class="number">2</span>, TimeUnit.MINUTES);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>场景D：购物车（Hash）与会话（String/TTL）</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 购物车：HSET cart:&#123;uid&#125; skuId quantity</span></span><br><span class="line">redisTemplate.opsForHash().increment(<span class="string">&quot;cart:&quot;</span>+uid, skuId, delta);</span><br><span class="line">redisTemplate.expire(<span class="string">&quot;cart:&quot;</span>+uid, <span class="number">7</span>, TimeUnit.DAYS);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 会话：SETEX session:&#123;token&#125; payload ttl</span></span><br><span class="line">stringRedisTemplate.opsForValue().set(<span class="string">&quot;session:&quot;</span>+token, payload, <span class="number">30</span>, TimeUnit.MINUTES);</span><br></pre></td></tr></table></figure>
+<h2 id="12-缓存与数据库一致性（强-最终一致的工程策略）">12. 缓存与数据库一致性（强/最终一致的工程策略）</h2>
+<ul>
+<li>
+<p>问题定义：缓存通常是“读高可用的副本”，写入链路中存在时间差或失败重试，导致“读到旧值/脏读/空读”。</p>
+</li>
+<li>
+<p>常见写策略与一致性影响：</p>
+<ul>
+<li>先写库再删缓存（推荐）：避免脏数据。若删失败→可能读到旧缓存；可通过重试/消息队列补偿或延迟双删缓解。</li>
+<li>先删缓存再写库：并发下可能读穿库再回填旧值，不推荐。</li>
+<li>更新缓存（写库同时更新缓存）：容易与并发写交错导致版本回退，不推荐。</li>
+</ul>
+</li>
+<li>
+<p>延迟双删（Delete-DB-DelayDelete）：</p>
+<ul>
+<li>流程：写库成功→删除缓存→延迟几十到数百毫秒再次删除缓存，覆盖并发回填的旧值。</li>
+<li>适用：写少读多、回填耗时短、允许小窗口不一致。</li>
+</ul>
+</li>
+<li>
+<p>Binlog/CDC 驱动的订阅变更（强烈推荐）：</p>
+<ul>
+<li>通过 Debezium/Canal 订阅数据库变更→异步刷新或删除缓存，天然顺序、可重放。</li>
+<li>要点：按表/主键粒度构建缓存key，确保幂等；消费失败可重试或死信处理。</li>
+</ul>
+</li>
+<li>
+<p>事务消息 / Outbox 模式：</p>
+<ul>
+<li>业务库写入与“变更事件”写入同一事务的Outbox表，异步可靠投递消息（轮询或CDC）→消费者刷新/删除缓存。</li>
+<li>保证“有且仅有一次”的落地可通过幂等键与去重表确保。</li>
+</ul>
+</li>
+<li>
+<p>读写路径的工程化设计：</p>
+<ul>
+<li>读：Cache-Aside + 逻辑过期 + 单航道刷新，降低击穿；关键Key加热点保护；空值短TTL防穿透。</li>
+<li>写：以“写库+删缓存”为主；关键链路叠加CDC/Outbox；必要时启用延迟双删；高一致性场景加版本号/乐观锁。</li>
+</ul>
+</li>
+<li>
+<p>时序与边界讨论：</p>
+<ul>
+<li>并发交错：A删缓存→B回填旧值→A写库→旧值被保留；通过延迟双删或版本控制清理旧值。</li>
+<li>读旧值窗口：根据业务SLA设定可接受窗口（如&lt;500ms），配合逻辑过期与异步刷新。</li>
+<li>淘汰与重建抖动：热点Key同步过期造成抖动，使用随机TTL和后台平滑刷新。</li>
+</ul>
+</li>
+<li>
+<p>示例代码：写库+删缓存+CDC 再保障</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserProfileService</span> &#123;</span><br><span class="line">    <span class="meta">@Autowired</span> <span class="keyword">private</span> JdbcTemplate jdbc;</span><br><span class="line">    <span class="meta">@Autowired</span> <span class="keyword">private</span> StringRedisTemplate redis;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">KEY</span> <span class="operator">=</span> <span class="string">&quot;user:prof:&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">updateNickname</span><span class="params">(Long uid, String nick)</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">n</span> <span class="operator">=</span> jdbc.update(<span class="string">&quot;update user set nickname=? where id=?&quot;</span>, nick, uid);</span><br><span class="line">        <span class="keyword">if</span> (n &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            redis.delete(KEY + uid); <span class="comment">// 先删缓存</span></span><br><span class="line">            <span class="comment">// 延迟双删兜底（可使用消息队列或延时任务）</span></span><br><span class="line">            CompletableFuture.runAsync(() -&gt; &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123; Thread.sleep(<span class="number">200</span>); &#125; <span class="keyword">catch</span> (InterruptedException ignored) &#123;&#125;</span><br><span class="line">                redis.delete(KEY + uid);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> UserDTO <span class="title function_">getProfile</span><span class="params">(Long uid)</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">k</span> <span class="operator">=</span> KEY + uid;</span><br><span class="line">        <span class="type">String</span> <span class="variable">v</span> <span class="operator">=</span> redis.opsForValue().get(k);</span><br><span class="line">        <span class="keyword">if</span> (v != <span class="literal">null</span>) <span class="keyword">return</span> Jsons.from(v);</span><br><span class="line">        <span class="type">UserDTO</span> <span class="variable">db</span> <span class="operator">=</span> jdbc.queryForObject(<span class="string">&quot;select id,nickname from user where id=?&quot;</span>, <span class="keyword">new</span> <span class="title class_">BeanPropertyRowMapper</span>&lt;&gt;(UserDTO.class), uid);</span><br><span class="line">        redis.opsForValue().set(k, Jsons.to(db), <span class="number">10</span>, TimeUnit.MINUTES);</span><br><span class="line">        <span class="keyword">return</span> db;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>运维与监控建议：
+<ul>
+<li>指标：cache hit ratio、avg rebuild time、hot key QPS、inconsistent read rate（采样校验）、删除失败重试次数。</li>
+<li>告警：删除失败/延迟队列堆积、CDC 消费滞后、回放失败、热点异常。</li>
+<li>演练：并发写+读压测、掉 CDC 消费、延迟双删关闭与开启对比，度量不一致窗口。</li>
+</ul>
+</li>
+</ul>
+<p>结语：Redis 的工程化落地在于“分层缓存、正确高可用、恰当持久化、合理淘汰、完善监控与演练”。将参数、流程与演练固化为 Runbook 才能在高压场景下稳定可靠。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/myblog/tags/Redis/" rel="tag"># Redis</a>
+              <a href="/myblog/tags/%E7%BC%93%E5%AD%98/" rel="tag"># 缓存</a>
+              <a href="/myblog/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/" rel="tag"># 高可用</a>
+              <a href="/myblog/tags/%E6%8C%81%E4%B9%85%E5%8C%96/" rel="tag"># 持久化</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/myblog/2025/06/02/ai/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%8F%91%E5%B1%95%E5%85%A8%E6%99%AF%E4%B8%8E%E5%85%B3%E9%94%AE%E6%8A%80%E6%9C%AF%E8%A7%A3%E6%9E%90/" rel="prev" title="大模型发展全景与关键技术解析：从注意力机制到前沿趋势">
+                  <i class="fa fa-angle-left"></i> 大模型发展全景与关键技术解析：从注意力机制到前沿趋势
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/myblog/2025/09/11/Java/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90/" rel="next" title="分布式锁实现方案与最佳实践">
+                  分布式锁实现方案与最佳实践 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">haiqingxx8</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
