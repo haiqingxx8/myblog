@@ -184,7 +184,7 @@
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/myblog/categories/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">43</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -403,7 +403,7 @@ vm.hugetlb_pool = 20G</p>
 <p>mkdir /mnt/huge<br>
 mount -t hugetlbfs nodev /mnt/huge</p>
 <h1>4. JVM启用大页</h1>
-<p>java -XX:+UseLargePages -XX:LargePageSizeInBytes=2m -Xms16g -Xmx16g …<br>
+<p>java -XX:+UseLargePages -XX:LargePageSizeInBytes=2m -Xms16g -Xmx16g ...<br>
 <strong>内存带宽测试</strong>：<br>
 使用<code>stream</code>工具测试内存带宽，命令：<code>stream | grep Triad</code>（Triad值即为近似带宽）。对于32GB以上堆，建议带宽≥100GB/s。</p>
 <h3 id="3-存储选型：IOPS与吞吐量的取舍">3. 存储选型：IOPS与吞吐量的取舍</h3>
@@ -741,13 +741,13 @@ net.core.somaxconn = 65535  # 增大连接队列</p>
 <h1>JMX Exporter配置（仅列内存泄漏相关指标）</h1>
 <p>rules:</p>
 <ul>
-<li>pattern: “java.lang:type=MemoryPool,name=Old Gen”<br>
+<li>pattern: &quot;java.lang:type=MemoryPool,name=Old Gen&quot;<br>
 name: jvm_old_gen_used_percent<br>
 value: Used / Committed * 100</li>
-<li>pattern: “java.lang:type=GarbageCollector,name=G1 Old Generation”<br>
+<li>pattern: &quot;java.lang:type=GarbageCollector,name=G1 Old Generation&quot;<br>
 name: jvm_old_gc_count<br>
 value: CollectionCount</li>
-<li>pattern: “java.lang:type=GarbageCollector,name=G1 Old Generation”<br>
+<li>pattern: &quot;java.lang:type=GarbageCollector,name=G1 Old Generation&quot;<br>
 name: jvm_old_gc_time<br>
 value: CollectionTime<br>
 <strong>Grafana告警规则</strong>：<br>
@@ -761,8 +761,8 @@ for: 5m<br>
 labels:<br>
 severity: critical<br>
 annotations:<br>
-summary: “内存泄漏风险：老年代使用率过高且GC频繁”<br>
-description: “老年代使用率%，5分钟内Full GC次数&gt;3次”<br>
+summary: &quot;内存泄漏风险：老年代使用率过高且GC频繁&quot;<br>
+description: &quot;老年代使用率%，5分钟内Full GC次数&gt;3次&quot;<br>
 <strong>离线分析工具</strong>：</li>
 </ul>
 </li>
@@ -838,7 +838,7 @@ iostat -x 1 10 &gt; system_iostat.log</p>
 <p><strong>分析泄漏嫌疑对象</strong>：</p>
 <ul>
 <li>在报告首页查看&quot;Top Suspects&quot;，重点关注&quot;Description&quot;中提到的大对象集合。</li>
-<li>例如：“The class “java.util.HashMap” loaded by “sun.misc.Launcher$AppClassLoader @ 0x700000008” occupies 5,120,000,000 (50.0%) bytes. […]”</li>
+<li>例如：&quot;The class &quot;java.util.HashMap&quot; loaded by &quot;sun.misc.Launcher$AppClassLoader @ 0x700000008&quot; occupies 5,120,000,000 (50.0%) bytes. [...]&quot;</li>
 </ul>
 </li>
 <li>

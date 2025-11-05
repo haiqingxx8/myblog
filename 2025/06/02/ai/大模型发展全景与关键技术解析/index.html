@@ -30,7 +30,7 @@
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/w-ss-s/blog-img/img/20240726172002.png">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/w-ss-s/blog-img/img/20240726172021.png">
 <meta property="article:published_time" content="2025-06-02T14:00:00.000Z">
-<meta property="article:modified_time" content="2025-11-02T15:27:04.868Z">
+<meta property="article:modified_time" content="2025-11-03T23:36:13.250Z">
 <meta property="article:author" content="haiqingxx8">
 <meta property="article:tag" content="大语言模型">
 <meta property="article:tag" content="Transformer">
@@ -187,7 +187,7 @@
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/myblog/categories/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">43</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -269,6 +269,10 @@
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
           <a href="/myblog/categories/AI%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">AI技术</span></a>
         </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/myblog/categories/AI%E6%8A%80%E6%9C%AF/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">大模型原理</span></a>
+        </span>
     </span>
 
   
@@ -289,13 +293,8 @@
     
     
     <div class="post-body" itemprop="articleBody"><h2 id="前言">前言</h2>
-<p>尊敬的各位同学，大家好。</p>
-<p>欢迎来到《大模型发展全景与关键技术解析》这门课程。在人工智能浪潮席卷全球的今天，大型语言模型（Large Language Models, LLMs）无疑是其中最璀璨的明珠。从能够与人自由对话的ChatGPT，到在编程、绘画、音乐等领域展现出惊人创造力的各类模型，大模型正在深刻地改变着我们的工作、学习与生活方式，并以前所未有的速度推动着科技革命的进程。</p>
-<p>然而，这座宏伟的“智能大厦”并非一日建成。它的背后，是数十年来无数科研人员智慧的结晶，是一系列关键技术的迭代与突破。理解这些核心技术，不仅能帮助我们更好地利用大模型这一强大工具，更是我们深入人工智能领域、探索未来无限可能性的基石。</p>
-<p>本课程旨在为大家系统性地梳理大模型发展的完整脉络，带领大家从源头出发，一步步探寻其技术演进的轨迹。我们将从“注意力机制”这一革命性的概念讲起，正是它打破了传统神经网络处理序列数据的瓶颈，为Transformer架构的诞生铺平了道路。我们将深入剖析Transformer的每一个组成部分——自注意力、多头注意力、位置编码——理解它们如何协同工作，构建起现代大模型的骨架。</p>
+<p>本本旨在为大家系统性地梳理大模型发展的完整脉络，带领大家从源头出发，一步步探寻其技术演进的轨迹。我们将从“注意力机制”这一革命性的概念讲起，正是它打破了传统神经网络处理序列数据的瓶颈，为Transformer架构的诞生铺平了道路。我们将深入剖析Transformer的每一个组成部分——自注意力、多头注意力、位置编码——理解它们如何协同工作，构建起现代大模型的骨架。</p>
 <p>在此基础上，我们将进一步探讨“大模型”时代的技术特征，解析其与传统模型的根本差异，并深入研究稀疏注意力、混合专家模型（MoE）等为了应对巨大计算挑战而诞生的前沿技术。同时，我们也会关注模型压缩与加速等关乎技术落地应用的关键环节。</p>
-<p>这门课程不仅仅是理论的讲解。我将尽可能地引入丰富的图示、生动的比喻和关键的伪代码，帮助大家建立直观的理解。我们的目标是，让每一位同学在课程结束时，不仅能“知其然”（知道大模型能做什么），更能“知其所以然”（理解大模型是如何工作的），并对该领域的前沿趋势有一个清晰的认识。</p>
-<p>这趟探索之旅即将启程。希望大家能保持好奇心，积极思考，与我一同揭开大模型神秘的面纱，洞见人工智能未来的发展方向。让我们开始吧！</p>
 <hr>
 <h2 id="详细目录">详细目录</h2>
 <h3 id="第一章：Transformer架构解析——大模型的技术基石"><strong>第一章：Transformer架构解析——大模型的技术基石</strong></h3>
@@ -377,10 +376,10 @@
 <p><strong>一个直观的例子：</strong><br>
 假设要翻译这样一句话：“尽管这部电影的演员阵容非常强大，特效也堪称一流，但我认为它的故事情节实在是太无聊了。”</p>
 <ul>
-<li>句子的核心转折和情感色彩在于后半部分的“但是…太无聊了”。</li>
+<li>句子的核心转折和情感色彩在于后半部分的“但是...太无聊了”。</li>
 <li>而前半部分描述的“强大的演员阵容”和“一流的特效”是让步状语。</li>
 </ul>
-<p>一个标准的Encoder-Decoder模型在解码时，可能很容易生成“The movie has a strong cast and great special effects…”，但当它需要生成后半部分时，由于距离太远，关于“无聊”这个关键信息的权重可能已经在上下文向量中变得微弱，导致翻译出错，比如可能会遗漏转折，或者错误地给出一个正面的评价。</p>
+<p>一个标准的Encoder-Decoder模型在解码时，可能很容易生成“The movie has a strong cast and great special effects...”，但当它需要生成后半部分时，由于距离太远，关于“无聊”这个关键信息的权重可能已经在上下文向量中变得微弱，导致翻译出错，比如可能会遗漏转折，或者错误地给出一个正面的评价。</p>
 <p><strong>总结一下Seq2Seq模型的困境：</strong></p>
 <ol>
 <li><strong>信息瓶颈</strong>：强制将任意长度的输入压缩成一个固定大小的向量，导致信息损失，尤其是对于长序列。</li>
@@ -394,8 +393,8 @@
 <h5 id="1-2-1-语言模型的本质：计算句子的概率"><strong>1.2.1 语言模型的本质：计算句子的概率</strong></h5>
 <p>什么是语言模型？简单来说，语言模型就是一个能够计算一个句子出现概率的数学模型。一个好的语言模型，应该能给符合语法、语义通顺的句子赋予较高的概率，而给那些不通顺、不知所云的句子赋予极低的概率。</p>
 <ul>
-<li>P(“今天天气真好”) &gt; P(“天气今天好真”)</li>
-<li>P(“我喜欢吃苹果”) &gt; P(“我喜欢喝苹果”)</li>
+<li>P(&quot;今天天气真好&quot;) &gt; P(&quot;天气今天好真&quot;)</li>
+<li>P(&quot;我喜欢吃苹果&quot;) &gt; P(&quot;我喜欢喝苹果&quot;)</li>
 </ul>
 <p>这个看似简单的任务，却是许多NLP应用的核心，例如：</p>
 <ul>
@@ -419,7 +418,7 @@
 <p>在Seq2Seq模型中，我们讨论的注意力机制，通常发生在解码器和编码器之间：解码器（Query）去“关注”编码器（Key-Value）。它解决的是输出序列和输入序列之间的对齐问题。</p>
 <p>而<strong>自注意力机制（Self-Attention）</strong>，顾名思义，是<strong>在单个序列内部进行的注意力计算</strong>。它让序列中的每个词，都能“看”到序列中的所有其他词，并计算出每个词对于理解当前词的重要性。换句话说，它在计算一个词的表示时，会动态地、有侧重地聚合序列中其他所有词的信息。</p>
 <p><strong>一个直观的例子：</strong></p>
-<p>思考这个句子：“The animal didn’t cross the street because <strong>it</strong> was too tired.”</p>
+<p>思考这个句子：“The animal didn't cross the street because <strong>it</strong> was too tired.”</p>
 <p>这里的代词“it”指代的是什么？对于人类来说，答案显而易见是“The animal”。但一个模型如何知道呢？自注意力机制就能解决这个问题。当模型处理到“it”这个词时，自注意力机制会计算“it”与句子中所有其他词的关联度，它会发现“it”与“The”和“animal”的关联度得分最高。因此，在生成“it”的新表示时，模型就会大量地融入“The animal”的信息，从而在内部“理解”了“it”的指代对象。</p>
 <p>自注意力机制，就是这样一把在句子内部寻找语义关联、解决长距离依赖、理解语法结构和消解歧义的“钥匙”。</p>
 <h4 id="1-2-1-Query-Key-Value：自注意力的核心抽象">1.2.1 Query, Key, Value：自注意力的核心抽象</h4>
@@ -516,7 +515,7 @@
 <h5 id="2-2-2-多头注意力的优势可视化"><strong>2.2.2 多头注意力的优势可视化</strong></h5>
 <p>多头注意力的美妙之处在于其可解释性。通过可视化不同头的注意力权重矩阵，我们可以直观地看到模型在关注什么。</p>
 <p><em>（此处可以引用一些经典的多头注意力可视化图片，例如The Illustrated Transformer博客中的图）</em></p>
-<p>例如，在处理句子“The animal didn’t cross the street because it was too tired.”时，我们可能会发现：</p>
+<p>例如，在处理句子“The animal didn't cross the street because it was too tired.”时，我们可能会发现：</p>
 <ul>
 <li><strong>某个头（Head 5）</strong> 的注意力高度集中在“it”和“The animal”之间，它学会了解决代词指代问题。</li>
 <li><strong>另一个头（Head 6）</strong> 的注意力可能集中在长距离的依赖上，将句子末尾的“tired”与前面的“animal”联系起来。</li>
@@ -645,7 +644,7 @@ d. 再次进行残差连接与层归一化。</li>
 <p>这是大模型最令人着迷的特性之一。所谓“涌现”，指的是那些在小模型上完全不存在，但在模型规模达到某个阈值后突然出现并快速增长的能力。这些能力并非被直接设计或训练出来的，而是大规模学习的副产品。</p>
 <ul>
 <li><strong>上下文学习（In-Context Learning）</strong>：你不需要用成千上万的样本去微调（fine-tune）模型来适应新任务。你只需要在模型的输入（prompt）中给出几个任务的例子（few-shot）甚至只有一个例子（one-shot），模型就能立刻理解任务要求，并给出正确的输出。它仿佛在“动态地”学习，而不是修改自己的权重。</li>
-<li><strong>思维链（Chain-of-Thought, CoT）</strong>：在处理复杂的推理问题（如数学应用题）时，如果你引导模型“一步一步地思考”（Let’s think step by step），它会生成一个详细的、逻辑连贯的推理步骤，并最终得出正确的答案。而在小模型上，即使进行微调，也难以获得这种能力。</li>
+<li><strong>思维链（Chain-of-Thought, CoT）</strong>：在处理复杂的推理问题（如数学应用题）时，如果你引导模型“一步一步地思考”（Let's think step by step），它会生成一个详细的、逻辑连贯的推理步骤，并最终得出正确的答案。而在小模型上，即使进行微调，也难以获得这种能力。</li>
 <li><strong>指令遵循（Instruction Following）</strong>：经过特定的指令微调（Instruction Tuning）后，大模型可以很好地理解并遵循人类用自然语言下达的各种复杂指令，完成开放式的生成、问答、翻译、代码编写等任务，表现出惊人的通用性。</li>
 </ul>
 <p><strong>图示：涌现能力曲线图</strong><br>

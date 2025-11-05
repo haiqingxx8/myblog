@@ -188,7 +188,7 @@
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/myblog/categories/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">43</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -541,7 +541,7 @@
 <li>方案：使用 Redisson 的 RLock，在调度任务开始前尝试获取锁，成功才执行；执行期间启用看门狗续约。</li>
 <li>关键代码（示意）：
 <ul>
-<li>获取：RLock lock = redisson.getLock(“lock:job:close-order”); boolean ok = lock.tryLock(0, TimeUnit.SECONDS); if (!ok) return;</li>
+<li>获取：RLock lock = redisson.getLock(&quot;lock:job:close-order&quot;); boolean ok = lock.tryLock(0, TimeUnit.SECONDS); if (!ok) return;</li>
 <li>执行：try { batchCloseOverdueOrders(); } finally { lock.unlock(); }</li>
 </ul>
 </li>
@@ -556,7 +556,7 @@
 <li>方案：使用 ZK Curator 的 InterProcessMutex 控制发布互斥；同时利用 ZK 的可观测性（节点、watch 事件）做审计与排障。</li>
 <li>关键代码（示意）：
 <ul>
-<li>InterProcessMutex lock = new InterProcessMutex(client, “/locks/publish”); if (lock.acquire(3, TimeUnit.SECONDS)) { try { publish(); } finally { lock.release(); } }</li>
+<li>InterProcessMutex lock = new InterProcessMutex(client, &quot;/locks/publish&quot;); if (lock.acquire(3, TimeUnit.SECONDS)) { try { publish(); } finally { lock.release(); } }</li>
 </ul>
 </li>
 <li>运维要点：ZK 三节点起步，关注会话过期；发布流程分阶段提交，失败可重试；监控前序节点/事件延迟。</li>
@@ -582,7 +582,7 @@
 <ul>
 <li>背景：内部报表计算任务每日一次；团队不希望引入外部组件。</li>
 <li>方案：创建 task_lock(task_name PK, expire_at)；插入占位代表持锁；失败则放弃；定时清理过期锁。</li>
-<li>SQL 草图：INSERT INTO task_lock(task_name, expire_at) VALUES(‘report’, now()+interval ‘5 min’);</li>
+<li>SQL 草图：INSERT INTO task_lock(task_name, expire_at) VALUES('report', now()+interval '5 min');</li>
 <li>风险控制：加唯一键防并发；执行完成删除占位；异常下过期释放；确保任务幂等（可重跑）。</li>
 </ul>
 </li>
